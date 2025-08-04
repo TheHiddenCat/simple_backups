@@ -1,6 +1,6 @@
 # 💾 SimpleBackups
 
-A PaperMC plugin for creating and managing backups of your world. Backups are stored separately and are compressed to safe storage.
+A PaperMC plugin for creating and managing backups of your world. Backups are stored separately and are compressed to save disk space.
 
 ## 📦 Features
 - Create backups of all loaded worlds asynchronously
