@@ -1,0 +1,10 @@
+name: SimpleBackups
+version: '1.0'
+main: nl.lewin.simpleBackups.SimpleBackups
+api-version: '1.21'
+commands:
+  simplebackups:
+    description: Manage backups
+    usage: /simplebackups <subcommand>
+    tab-completer: nl.lewin.simpleBackups.commands.pluginCommandsTabCompleter
+    permission: simplebackups.admin
