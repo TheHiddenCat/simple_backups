@@ -2,6 +2,7 @@ package nl.lewin.simpleBackups.commands;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import nl.lewin.simpleBackups.PluginConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.Plugin;
@@ -12,9 +13,9 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
-import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -22,10 +23,12 @@ public final class BackupCommand implements SubCommand {
     private static final @NotNull AtomicBoolean running = new AtomicBoolean(false);
     private final @NotNull Plugin plugin;
     private final @NotNull Logger logger;
+    private final @NotNull PluginConfig config;
 
-    public BackupCommand(@NotNull final Plugin plugin) {
+    public BackupCommand(@NotNull final Plugin plugin, @NotNull final PluginConfig config) {
         this.plugin = plugin;
-        this.logger = plugin.getLogger();
+        this.config = config;
+        logger = plugin.getLogger();
     }
 
     @Override
@@ -61,9 +64,11 @@ public final class BackupCommand implements SubCommand {
             return;
         }
 
+        cleanupBackups(backupFolder);
+
         Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
             try (var zos = new ZipOutputStream(Files.newOutputStream(backupZip, StandardOpenOption.WRITE))) {
-                zos.setLevel(Deflater.BEST_COMPRESSION);
+                zos.setLevel(config.getCompressionLevel());
 
                 for (var world : worlds) {
                     var worldFolder = world.getWorldFolder().toPath();
@@ -80,10 +85,12 @@ public final class BackupCommand implements SubCommand {
         }, 20L);
     }
 
-    private void appendZip(@NotNull final Path folder, @NotNull final String rootPath, @NotNull final ZipOutputStream zos) throws IOException {
+    private void appendZip(@NotNull final Path folder, @NotNull final String rootPath,
+                           @NotNull final ZipOutputStream zos) throws IOException {
         Files.walkFileTree(folder, new SimpleFileVisitor<>() {
             @Override
-            public @NotNull FileVisitResult visitFile(@NotNull final Path file, @NotNull final BasicFileAttributes attrs) throws IOException {
+            public @NotNull FileVisitResult visitFile(@NotNull final Path file,
+                                                      @NotNull final BasicFileAttributes attrs) throws IOException {
                 if (file.getFileName().toString().equals("session.lock")) {
                     return FileVisitResult.CONTINUE;
                 }
@@ -98,6 +105,40 @@ public final class BackupCommand implements SubCommand {
                 return FileVisitResult.CONTINUE;
             }
         });
+    }
+
+    private void cleanupBackups(@NotNull final Path folder) {
+        try (var files = Files.list(folder)) {
+            var zipBackups = files
+                    .filter(p -> Files.isRegularFile(p) && p.getFileName().toString().endsWith(".zip"))
+                    .sorted(Comparator.comparingLong(p -> {
+                        try {
+                            return Files.getLastModifiedTime(p).toMillis();
+                        } catch (IOException e) {
+                            logger.warning("Failed to get modified time for: " + p);
+                            return Long.MAX_VALUE; // Push unreadable files to the end
+                        }
+                    }))
+                    .toList();
+
+            int excess = zipBackups.size() - config.getMaxBackups();
+            if (excess <= 0) {
+                return;
+            }
+
+            for (int i = 0; i < excess; i++) {
+                var oldBackup = zipBackups.get(i);
+                try {
+                    Files.deleteIfExists(oldBackup);
+                    logger.info("Deleted old backup: " + oldBackup.getFileName());
+                } catch (IOException e) {
+                    logger.warning("Failed to delete backup '" + oldBackup.getFileName() + "': " + e.getMessage());
+                }
+            }
+
+        } catch (IOException e) {
+            logger.severe("Failed to clean up backups in folder '" + folder + "': " + e.getMessage() );
+        }
     }
 
     @Override

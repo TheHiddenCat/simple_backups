@@ -1,0 +1,7 @@
+# Zip compression level (0-9)
+# Higher means better compression, but increases backup time and CPU usage.
+compression-level: 9
+
+# The maximum number of stored backups before deleting the oldest one. Set to 0 to disable.
+# When `N` is reached, must delete the oldest backup before new one can be created.
+max-backups: 5

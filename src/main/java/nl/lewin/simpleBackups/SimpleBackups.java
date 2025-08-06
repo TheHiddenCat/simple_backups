@@ -9,6 +9,10 @@ import java.io.File;
 public final class SimpleBackups extends JavaPlugin {
     @Override
     public void onEnable() {
+        saveDefaultConfig();
+        var config = getConfig();
+        var pluginConfig = new PluginConfig(config);
+
         var backupDirectory = new File(getDataFolder(), "backups");
         if (!backupDirectory.exists() && !backupDirectory.mkdirs()) {
             getLogger().severe("Failed to create backup directory: " + backupDirectory.getAbsolutePath());
@@ -17,7 +21,7 @@ public final class SimpleBackups extends JavaPlugin {
 
         var command = getCommand("simplebackups");
         if (command != null) {
-            command.setExecutor(new PluginCommands(this));
+            command.setExecutor(new PluginCommands(this, pluginConfig));
             command.setTabCompleter(new PluginCommandsTabCompleter());
         }
         else {

@@ -2,6 +2,7 @@ package nl.lewin.simpleBackups.commands;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import nl.lewin.simpleBackups.PluginConfig;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -14,9 +15,9 @@ import java.util.Map;
 public final class PluginCommands implements CommandExecutor {
     private final @NotNull Map<String, SubCommand> subCommands;
 
-    public PluginCommands(@NotNull final Plugin plugin) {
+    public PluginCommands(@NotNull final Plugin plugin, @NotNull final PluginConfig config) {
         subCommands = new HashMap<>();
-        registerSubcommand(new BackupCommand(plugin));
+        registerSubcommand(new BackupCommand(plugin, config));
         registerSubcommand(new HelpCommand());
     }
 
