@@ -82,7 +82,7 @@ public final class BackupCommand implements SubCommand {
                 plugin.getServer().broadcast(Component.text("Server backup complete", NamedTextColor.GREEN));
                 running.set(false);
             }
-        }, 20L);
+        }, 20L); // This delay is necessary because otherwise the backup will run before the world save is properly completed, causing the backup-data to be corrupted.
     }
 
     private void appendZip(@NotNull final Path folder, @NotNull final String rootPath,
@@ -135,9 +135,8 @@ public final class BackupCommand implements SubCommand {
                     logger.warning("Failed to delete backup '" + oldBackup.getFileName() + "': " + e.getMessage());
                 }
             }
-
         } catch (IOException e) {
-            logger.severe("Failed to clean up backups in folder '" + folder + "': " + e.getMessage() );
+            logger.severe("Failed to clean up backups in folder '" + folder + "': " + e.getMessage());
         }
     }
 
