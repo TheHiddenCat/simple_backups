@@ -8,9 +8,9 @@ import org.jetbrains.annotations.NotNull;
 public final class HelpCommand implements SubCommand {
     @Override
     public void execute(@NotNull CommandSender sender, @NotNull String[] args) {
-        sender.sendMessage(Component.text("[SimpleBackups]", NamedTextColor.AQUA));
-        sender.sendMessage(Component.text("/simplebackups backup", NamedTextColor.GRAY));
-        sender.sendMessage(Component.text("/simplebackups help", NamedTextColor.GRAY));
+        sender.sendMessage(Component.text("[SimpleBackups]", NamedTextColor.BLUE));
+        sender.sendMessage(Component.text("/simplebackups backup", NamedTextColor.AQUA));
+        sender.sendMessage(Component.text("/simplebackups help", NamedTextColor.AQUA));
     }
 
     @Override
