@@ -8,6 +8,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -24,6 +25,7 @@ public final class BackupCommand implements SubCommand {
     private final @NotNull Plugin plugin;
     private final @NotNull Logger logger;
     private final @NotNull PluginConfig config;
+    private static final int BUFFER_SIZE = 65536; // 64KB
 
     public BackupCommand(@NotNull final Plugin plugin, @NotNull final PluginConfig config) {
         this.plugin = plugin;
@@ -67,7 +69,8 @@ public final class BackupCommand implements SubCommand {
         cleanupBackups(backupFolder);
 
         Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
-            try (var zos = new ZipOutputStream(Files.newOutputStream(backupZip, StandardOpenOption.WRITE))) {
+            try (var bos = new BufferedOutputStream(Files.newOutputStream(backupZip, StandardOpenOption.WRITE), BUFFER_SIZE);
+                 var zos = new ZipOutputStream(bos)) {
                 zos.setLevel(config.getCompressionLevel());
 
                 for (var world : worlds) {
